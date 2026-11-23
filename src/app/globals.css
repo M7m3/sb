@@ -1,0 +1,834 @@
+@import "tailwindcss";
+
+/* Brand tokens. Components use the side-neutral names (--accent, --light-bg ...).
+   Each side maps them: locksmith = gold + bone, automotive = lightning blue + frost.
+   The side is chosen by data-side on the shell. */
+:root,
+[data-side="locksmith"] {
+  --base: #0a0a0b; /* ink black, dark sections */
+  --surface: #141416;
+  --surface-2: #1c1c1f;
+  --accent: #d4af37; /* gold */
+  --accent-light: #f2d37a;
+  --accent-deep: #b8892a; /* deep brass */
+  --accent-on-light: #8a6710; /* accent text and lines on light sections (passes contrast) */
+  --light-bg: #efe8da; /* bone, light sections */
+  --light-ink: #15130f; /* text on light sections */
+  --light-muted: #4a463e; /* secondary text on light sections */
+  --light-faint: #8e8a82; /* placeholders on light sections */
+  --ink: #f5f5f5; /* text on dark */
+  --muted: #9a9a9f;
+  --glow-pct: 28%;
+}
+
+[data-side="automotive"] {
+  --base: #05080f; /* deep night navy */
+  --surface: #0b1220;
+  --surface-2: #111b2e;
+  --accent: #00a3ff; /* lightning blue */
+  --accent-light: #7fd4ff;
+  --accent-deep: #0057d9;
+  --accent-on-light: #0057d9;
+  --light-bg: #e8eef5; /* frost */
+  --light-ink: #0b1220;
+  --light-muted: #46536a;
+  --light-faint: #7c8aa0;
+  --ink: #f2f6fb;
+  --muted: #8d98ab;
+  --glow-pct: 30%;
+}
+
+/* Account area: neutral dark theme that works for both sides (silver accent).
+   Locksmith and Automotive pills inside it use their own data-side tokens. */
+[data-side="account"] {
+  --base: #0a0b0d;
+  --surface: #131418;
+  --surface-2: #1a1c21;
+  --accent: #c9ced6;
+  --accent-light: #e6e9ee;
+  --accent-deep: #8f96a3;
+  --accent-on-light: #4b5260;
+  --light-bg: #e9eaec;
+  --light-ink: #0b0c0f;
+  --light-muted: #4b5260;
+  --light-faint: #858b97;
+  --ink: #f3f4f6;
+  --muted: #9298a3;
+  --glow-pct: 20%;
+}
+
+/* Derived tokens. Declared for every side so they resolve with that side's accent. */
+:root,
+[data-side] {
+  --line: color-mix(in srgb, var(--accent) 18%, transparent);
+  --glow: color-mix(in srgb, var(--accent) var(--glow-pct), transparent);
+  --glow-strong: color-mix(in srgb, var(--accent) 45%, transparent);
+  --accent-gradient: linear-gradient(135deg, var(--accent-light), var(--accent) 70%, var(--accent-deep));
+  --on-accent: var(--base); /* text on accent fills */
+  --scrim: #000; /* neutral dark overlays, always used with an alpha */
+  /* semantic */
+  --status-open: #34d399;
+  --status-closed: #f59e0b;
+  --status-unknown: #6b7280;
+  --success: #34d399;
+  --success-on-light: #047857;
+  --danger: #f87171;
+  --danger-on-light: #b91c1c;
+  /* deprecated aliases, do not use in new code */
+  --gold: var(--accent);
+  --gold-light: var(--accent-light);
+  --deep-brass: var(--accent-deep);
+}
+
+/* Logo colours per side. Registered with @property so they can animate on the toggle. */
+@property --logo-1 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #f2d37a;
+}
+@property --logo-2 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #d4af37;
+}
+@property --logo-3 {
+  syntax: "<color>";
+  inherits: true;
+  initial-value: #b8892a;
+}
+.logo-shell {
+  --logo-1: #f2d37a;
+  --logo-2: #d4af37;
+  --logo-3: #b8892a;
+  transition:
+    --logo-1 600ms ease,
+    --logo-2 600ms ease,
+    --logo-3 600ms ease;
+}
+.logo-shell[data-logo="automotive"] {
+  --logo-1: #7fd4ff;
+  --logo-2: #00a3ff;
+  --logo-3: #0057d9;
+}
+@media (prefers-reduced-motion: reduce) {
+  .logo-shell {
+    transition: none;
+  }
+}
+
+@theme inline {
+  --color-base: var(--base);
+  --color-surface: var(--surface);
+  --color-surface2: var(--surface-2);
+  --color-accent: var(--accent);
+  --color-accent-light: var(--accent-light);
+  --color-accent-deep: var(--accent-deep);
+  --color-accent-on-light: var(--accent-on-light);
+  --color-light-bg: var(--light-bg);
+  --color-light-ink: var(--light-ink);
+  --color-light-muted: var(--light-muted);
+  --color-light-faint: var(--light-faint);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-scrim: var(--scrim);
+  --color-on-accent: var(--on-accent);
+  --color-status-closed: var(--status-closed);
+  --color-success: var(--success);
+  --color-success-light: var(--success-on-light);
+  --color-danger: var(--danger);
+  --color-danger-light: var(--danger-on-light);
+  --font-sans: var(--font-inter);
+  --font-display: var(--font-archivo);
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--base);
+  color: var(--ink);
+  font-family: var(--font-inter), system-ui, sans-serif;
+}
+
+.accent-text {
+  background: linear-gradient(120deg, var(--accent-light), var(--accent) 55%, var(--accent-deep));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.accent-bg {
+  background: var(--accent-gradient);
+}
+
+:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+/* ---------- Locksmith hero ---------- */
+.hero-item {
+  opacity: 0;
+  transform: translateY(16px);
+}
+[data-hero="ready"] .hero-item {
+  animation: hero-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: calc(var(--i, 0) * 70ms);
+}
+@keyframes hero-rise {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@keyframes hero-fade {
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* Slow background zoom, desktop only */
+@media (min-width: 768px) and (prefers-reduced-motion: no-preference) {
+  .hero-bg {
+    transform: scale(1.06);
+  }
+  [data-hero="ready"] .hero-bg {
+    animation: hero-zoom 6s ease-out both;
+  }
+}
+@keyframes hero-zoom {
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes hero-bob {
+  0%, 100% {
+    transform: translateY(0);
+    opacity: 0.5;
+  }
+  50% {
+    transform: translateY(8px);
+    opacity: 1;
+  }
+}
+.hero-cue {
+  animation: hero-bob 2s ease-in-out infinite;
+}
+
+/* Soft shimmer sweep on gold buttons (hover devices, desktop) */
+.btn-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+@media (hover: hover) and (min-width: 1024px) {
+  .btn-shimmer::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(105deg, transparent 30%, color-mix(in srgb, var(--ink) 45%, transparent) 50%, transparent 70%);
+    transform: translateX(-120%);
+    pointer-events: none;
+  }
+  .btn-shimmer:hover::after {
+    transform: translateX(120%);
+    transition: transform 0.7s ease;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  [data-hero="ready"] .hero-item {
+    animation: hero-fade 0.3s ease both;
+    animation-delay: 0ms;
+  }
+  .hero-item {
+    transform: none;
+  }
+  .hero-cue {
+    animation: none;
+  }
+}
+
+/* ---------- Live status dot ---------- */
+.status-dot {
+  position: relative;
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  flex-shrink: 0;
+  border-radius: 9999px;
+  background: var(--status-unknown);
+}
+.status-open {
+  background: var(--status-open);
+}
+.status-open::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--status-open);
+  animation: status-pulse 1.8s ease-out infinite;
+}
+.status-closed {
+  background: var(--status-closed);
+}
+@keyframes status-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(3);
+    opacity: 0;
+  }
+}
+
+/* ---------- Metallic headline with a sweeping light band ---------- */
+:root {
+  --shine-every: 6s;
+  --shine-delay: 2.2s; /* starts after the intro */
+}
+.accent-metal {
+  background-image:
+    linear-gradient(100deg, transparent 42%, color-mix(in srgb, var(--ink) 95%, transparent) 50%, transparent 58%),
+    linear-gradient(100deg, var(--accent-deep) 0%, var(--accent) 35%, var(--accent-light) 60%, var(--accent) 100%);
+  background-size: 250% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  background-position: 160% 0, 0 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+[data-hero="ready"] .accent-metal {
+  animation: metal-shine var(--shine-every) ease-in-out var(--shine-delay) infinite;
+}
+@keyframes metal-shine {
+  0% {
+    background-position: 160% 0, 0 0;
+  }
+  20%,
+  100% {
+    background-position: -60% 0, 0 0;
+  }
+}
+
+/* ---------- Hero ambient: grain and vignette ---------- */
+.hero-grain {
+  position: absolute;
+  inset: -100px;
+  opacity: 0.055;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  animation: grain-shift 1s steps(1) infinite;
+  will-change: transform;
+}
+@keyframes grain-shift {
+  0% { transform: translate3d(0, 0, 0); }
+  20% { transform: translate3d(-37px, 23px, 0); }
+  40% { transform: translate3d(29px, -41px, 0); }
+  60% { transform: translate3d(-51px, -17px, 0); }
+  80% { transform: translate3d(43px, 35px, 0); }
+}
+.hero-vignette {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at center, transparent 50%, color-mix(in srgb, var(--scrim) 60%, transparent) 100%);
+}
+
+/* Pause every loop inside the hero while it is off screen or the tab is hidden */
+[data-paused="true"] *,
+[data-paused="true"] *::before,
+[data-paused="true"] *::after {
+  animation-play-state: paused !important;
+}
+
+/* ---------- Call Now: running light border and breathing glow ---------- */
+.call-btn {
+  position: relative;
+  display: inline-flex;
+  transition: transform 0.2s ease;
+}
+.call-btn:hover {
+  transform: translateY(-2px);
+}
+.call-glow {
+  position: absolute;
+  left: 12%;
+  right: 12%;
+  bottom: -10px;
+  height: 22px;
+  border-radius: 50%;
+  background: radial-gradient(ellipse, color-mix(in srgb, var(--accent) 80%, transparent), transparent 70%);
+  opacity: 0.4;
+  animation: breathe 2.8s ease-in-out infinite;
+  pointer-events: none;
+}
+.call-frame {
+  position: relative;
+  display: flex;
+  width: 100%;
+  overflow: hidden;
+  border-radius: 9999px;
+  padding: 1.5px;
+  background: color-mix(in srgb, var(--accent) 45%, transparent);
+}
+.call-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 150%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%) rotate(0deg);
+  background: conic-gradient(from 0deg, transparent 0 45%, var(--accent-deep) 65%, var(--accent-light) 88%, var(--ink) 98%, transparent 100%);
+  animation: ring-spin 3.5s linear infinite;
+  will-change: transform;
+}
+.call-fill {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 9999px;
+  padding: 0.875rem 2rem;
+  font-weight: 600;
+  color: var(--on-accent);
+  background: var(--accent-gradient);
+}
+@keyframes ring-spin {
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+@keyframes breathe {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.7; }
+}
+
+/* Floating call button: breathing glow only */
+.call-breathe::before {
+  content: "";
+  position: absolute;
+  inset: -10px;
+  z-index: -1;
+  border-radius: 9999px;
+  background: radial-gradient(circle, color-mix(in srgb, var(--accent) 60%, transparent), transparent 70%);
+  opacity: 0.4;
+  animation: breathe 2.6s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .status-open::after,
+  .call-ring,
+  .call-glow,
+  .call-breathe::before,
+  .hero-grain,
+  [data-hero="ready"] .accent-metal {
+    animation: none;
+  }
+  .call-glow,
+  .call-breathe::before {
+    opacity: 0.5;
+  }
+  .call-ring {
+    transform: translate(-50%, -50%) rotate(40deg);
+  }
+}
+
+/* ---------- Locksmith editorial system ---------- */
+.story-container {
+  margin-inline: auto;
+  max-width: 80rem;
+  padding-inline: 1.25rem;
+}
+@media (min-width: 640px) {
+  .story-container {
+    padding-inline: 1.5rem;
+  }
+}
+@media (min-width: 1024px) {
+  .story-container {
+    padding-right: 256px; /* room for the sticky pin rail */
+  }
+}
+
+.sec-ink,
+.sec-light,
+.sec-surface {
+  position: relative;
+  isolation: isolate;
+}
+.sec-surface {
+  background: var(--surface);
+  color: var(--ink);
+}
+.sec-ink {
+  background: var(--base);
+  color: var(--ink);
+}
+.sec-light {
+  background: var(--light-bg);
+  color: var(--light-ink);
+}
+/* static paper grain on cream, film grain on dark */
+.sec-ink::before,
+.sec-surface::before,
+.sec-light::before,
+.sec-grain-ink {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+.sec-ink::before,
+.sec-surface::before,
+.sec-grain-ink {
+  opacity: 0.04;
+}
+.sec-light::before {
+  opacity: 0.07;
+  mix-blend-mode: multiply;
+}
+.sec-grain-ink {
+  z-index: 0;
+}
+
+/* Giant hero words: outlined, fill with gold on hover or focus */
+.hero-word {
+  -webkit-text-stroke: 1.5px var(--accent);
+  color: transparent;
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  opacity: 0.85;
+  padding-block: 0.04em;
+  transition: background-size 350ms cubic-bezier(0.22, 1, 0.36, 1), opacity 250ms;
+}
+@media (min-width: 1024px) {
+  .hero-word {
+    opacity: 0.8;
+  }
+  .hero-word-link {
+    display: block;
+    width: fit-content;
+  }
+  .hero-word-link[data-dim="true"] .hero-word {
+    opacity: 0.3;
+  }
+}
+@media (hover: hover) {
+  .hero-word-link:hover .hero-word {
+    background-size: 100% 100%;
+    opacity: 1;
+  }
+}
+.hero-word-link:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 6px;
+  border-radius: 6px;
+}
+.hero-word-link:focus-visible .hero-word {
+  background-size: 100% 100%;
+  opacity: 1;
+}
+
+/* Secondary hero button. A text link on short phones so the first screen stays clear. */
+.hero-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid color-mix(in srgb, var(--accent) 60%, transparent);
+  border-radius: 9999px;
+  padding: 0.9rem 2rem;
+  font-weight: 600;
+  color: var(--ink);
+  transition: background-color 0.2s, border-color 0.2s;
+}
+.hero-secondary:hover {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+  border-color: var(--accent);
+}
+@media (max-width: 1023px) and (max-height: 780px) {
+  .hero-secondary:not(.hero-secondary-block) {
+    border: 0;
+    padding: 0.4rem;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-color: color-mix(in srgb, var(--accent) 60%, transparent);
+  }
+}
+
+/* =====================================================================
+   TYPE ROLES. Use these, never hand-pick sizes. See AGENTS.md.
+   Display roles: Archivo 900, 118% width, uppercase, -0.02em, line height 0.9.
+   (Defined with @utility so Tailwind keeps them and variants like lg: still work.)
+   ===================================================================== */
+@utility t-display-xl {
+  font-family: var(--font-archivo), "Arial Black", system-ui, sans-serif;
+  font-weight: 900;
+  font-stretch: 118%;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  text-wrap: balance;
+  /* Hero words and UNLOCKED. Sized by min(vw, vh) so the first screen never overflows.
+     Mobile uses 100% width: at 118% the word BUSINESS does not fit a 390px screen. */
+  font-size: clamp(2.6rem, 15vw, 4.6rem);
+  font-stretch: 100%;
+  @media (min-width: 1024px) {
+    font-stretch: 118%;
+    font-size: clamp(3.4rem, min(8.6vw, 17vh), 10.5rem);
+  }
+  @media (min-width: 1280px) {
+    font-size: clamp(3.4rem, min(10.2vw, 17vh), 11.5rem);
+  }
+}
+
+@utility t-display-l {
+  font-family: var(--font-archivo), "Arial Black", system-ui, sans-serif;
+  font-weight: 900;
+  font-stretch: 118%;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  text-wrap: balance;
+  font-size: clamp(3.4rem, 14vw, 9rem);
+}
+
+@utility t-display-m {
+  font-family: var(--font-archivo), "Arial Black", system-ui, sans-serif;
+  font-weight: 900;
+  font-stretch: 118%;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  text-wrap: balance;
+  font-size: clamp(2.6rem, 9.5vw, 6.5rem);
+}
+
+@utility t-heading {
+  font-family: var(--font-archivo), "Arial Black", system-ui, sans-serif;
+  font-weight: 900;
+  font-stretch: 118%;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  text-wrap: balance;
+  font-size: clamp(1.75rem, 3vw, 2.6rem);
+}
+
+@utility t-prompt {
+  font-family: var(--font-archivo), "Arial Black", system-ui, sans-serif;
+  font-weight: 900;
+  font-stretch: 118%;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  text-wrap: balance;
+  font-size: clamp(1.25rem, 2.2vw, 1.875rem);
+}
+
+@utility t-row-title {
+  font-family: var(--font-archivo), "Arial Black", system-ui, sans-serif;
+  font-weight: 900;
+  font-stretch: 118%;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  text-wrap: balance;
+  font-size: 1.0625rem; /* 17px on mobile, never more than 2 lines at 360px */
+  line-height: 1.05;
+  @media (min-width: 640px) {
+    font-size: 1.5rem;
+    line-height: 0.95;
+  }
+}
+
+@utility t-numeral {
+  font-family: var(--font-archivo), "Arial Black", system-ui, sans-serif;
+  font-weight: 900;
+  font-stretch: 118%;
+  text-transform: uppercase;
+  letter-spacing: -0.02em;
+  line-height: 0.9;
+  text-wrap: balance;
+  font-size: 3rem;
+}
+
+@utility t-lead {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 1.125rem;
+  font-weight: 400;
+  line-height: 1.4;
+  @media (min-width: 640px) {
+    font-size: 1.25rem;
+  }
+}
+
+@utility t-body {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+@utility t-small {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+@utility t-ui {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+@utility t-ui-nav {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+@utility t-micro {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+@utility t-label {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+
+@utility t-tab {
+  font-family: var(--font-inter), system-ui, sans-serif;
+  font-size: 0.6875rem; /* 11px, tab bar labels */
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* ---------- Locksmith section patterns ---------- */
+.swipe-row {
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+}
+.swipe-row::-webkit-scrollbar {
+  display: none;
+}
+
+/* Door hotspots: slow pulsing ring */
+.hotspot-ring::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1.5px solid var(--accent);
+  animation: hotspot-pulse 2.6s ease-out infinite;
+}
+@keyframes hotspot-pulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* Reviews wall: two drifting rows */
+.marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  gap: 1.25rem;
+  animation: marquee-left 70s linear infinite;
+  will-change: transform;
+}
+.marquee-reverse .marquee-track {
+  animation-name: marquee-right;
+  animation-duration: 80s;
+}
+.marquee:hover .marquee-track {
+  animation-play-state: paused;
+}
+[data-paused="true"] .marquee-track {
+  animation-play-state: paused;
+}
+@keyframes marquee-left {
+  to {
+    transform: translate3d(-50%, 0, 0);
+  }
+}
+@keyframes marquee-right {
+  from {
+    transform: translate3d(-50%, 0, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .marquee {
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .marquee-track {
+    animation: none;
+    flex-wrap: wrap;
+    width: auto;
+  }
+  .marquee-track [data-dup] {
+    display: none;
+  }
+}
+
+/* Booking: outlined step tiles (CAR / HOME / BUSINESS) */
+.pick-word {
+  -webkit-text-stroke: 1.5px var(--accent);
+  color: transparent;
+  background-image: linear-gradient(var(--accent), var(--accent));
+  background-repeat: no-repeat;
+  background-size: 0% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  transition: background-size 350ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.pick-word[data-selected="true"],
+button:hover > .pick-word,
+button:focus-visible > .pick-word {
+  background-size: 100% 100%;
+}

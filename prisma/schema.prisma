@@ -1,0 +1,131 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Side {
+  LOCKSMITH
+  AUTOMOTIVE
+}
+
+model Booking {
+  id            String   @id @default(cuid())
+  createdAt     DateTime @default(now())
+  side          Side
+  service       String
+  name          String
+  phone         String
+  email         String?
+  vehicleMake   String?
+  vehicleModel  String?
+  area          String   // address or area
+  preferredDate DateTime?
+  message       String?
+  status        String   @default("NEW")
+
+  // Optional link to a signed in customer (later). Existing bookings and guest bookings keep working.
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+}
+
+// ---------------------------------------------------------------------------
+// DRAFT account models. Not used by the app yet: the account area runs on demo
+// data (src/content/demo-account.ts). Sign in will use Auth.js later, which can
+// map onto User (and add its own Account/Session tables when it is installed).
+// Key codes are never stored here or shown in the UI.
+// ---------------------------------------------------------------------------
+
+model User {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  name      String
+  email     String?  @unique
+  phone     String?  @unique
+
+  vehicles   Vehicle[]
+  properties Property[]
+  jobs       Job[]
+  bookings   Booking[]
+}
+
+model Vehicle {
+  id          String   @id @default(cuid())
+  createdAt   DateTime @default(now())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  make        String
+  model       String
+  year        Int?
+  colour      String?
+  photoUrl    String?
+  keysOnFile  Int      @default(0)
+  lastService DateTime?
+
+  jobs Job[]
+
+  @@index([userId])
+}
+
+enum PropertyKind {
+  HOME
+  BUSINESS
+}
+
+model Property {
+  id        String       @id @default(cuid())
+  createdAt DateTime     @default(now())
+  userId    String
+  user      User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind      PropertyKind
+  address   String
+  locks     String[] // plain notes such as "Front door deadbolt, rekeyed Mar 2026"
+
+  jobs Job[]
+
+  @@index([userId])
+}
+
+enum JobStatus {
+  SCHEDULED
+  COMPLETED
+  CANCELLED
+}
+
+model Job {
+  id         String    @id @default(cuid())
+  createdAt  DateTime  @default(now())
+  userId     String
+  user       User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  side       Side
+  service    String
+  date       DateTime
+  status     JobStatus @default(COMPLETED)
+  techName   String? // first name only
+  notes      String?
+  priceCents Int?
+  invoiceUrl String?
+
+  vehicleId  String?
+  vehicle    Vehicle?  @relation(fields: [vehicleId], references: [id], onDelete: SetNull)
+  propertyId String?
+  property   Property? @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+
+  photos JobPhoto[]
+
+  @@index([userId, date])
+}
+
+model JobPhoto {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  jobId     String
+  job       Job      @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  url       String
+  caption   String?
+}
